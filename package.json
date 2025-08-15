@@ -1,0 +1,29 @@
+{
+  "name": "celebrity-fan-messages",
+  "version": "0.0.1",
+  "description": "Celebrity Fan Messages DApp on Shardeum Unstablenet",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile": "hardhat compile",
+    "deploy:unstable": "hardhat run scripts/deploy.mjs --network shardeum",
+    "abi:export": "node scripts/export-abi.mjs",
+    "start": "node backend/server.mjs",
+    "dev": "NODE_ENV=development node backend/server.mjs"
+  },
+  "keywords": [],
+  "author": "hackathon",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "dotenv": "^17.2.1",
+    "hardhat": "^3.0.0"
+  },
+  "type": "module",
+  "dependencies": {
+    "solc": "^0.8.30"
+  }
+}

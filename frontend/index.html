@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Celebrity Fan Messages</title>
+	<style>
+		body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+		input, textarea, button { font-size: 1rem; padding: 0.6rem 0.8rem; }
+		textarea { width: 100%; height: 120px; }
+		.row { margin: 0.75rem 0; }
+		.card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem; }
+		small { color: #666; }
+		a { color: #0b66ff; text-decoration: none; }
+	</style>
+</head>
+<body>
+	<h2>Celebrity Fan Messages</h2>
+	<div class="card">
+		<div class="row"><button id="connectBtn">Connect Wallet</button> <span id="account"></span></div>
+		<div class="row"><textarea id="msg" placeholder="Write your message to the celebrity..."></textarea></div>
+		<div class="row"><button id="sendBtn">Pay 0.2 SHM & Send</button></div>
+		<div class="row"><small id="status"></small></div>
+	</div>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.12.1/ethers.umd.min.js" integrity="sha512-7jZfTjYvB2oYWEtU7K3mAZK1yB4dWtcXHQhBbW7lcFfRHgWrS5QtRZ0x+yzPq2xk4PV7rP1h6JjzBgx8MeJOWg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<script>
+	const RPC_URL = 'https://api-unstable.shardeum.org';
+	const CHAIN_ID = 8080; // Unstablenet
+	const CONTRACT_ADDRESS = 'REPLACE_WITH_DEPLOYED_ADDRESS';
+	let abi = [];
+
+	async function ensureNetwork() {
+		const provider = window.ethereum;
+		if (!provider) throw new Error('MetaMask not found');
+		const network = await provider.request({ method: 'eth_chainId' });
+		if (parseInt(network, 16) !== CHAIN_ID) {
+			await provider.request({
+				method: 'wallet_addEthereumChain',
+				params: [{
+					chainId: '0x' + CHAIN_ID.toString(16),
+					chainName: 'Shardeum Unstablenet',
+					nativeCurrency: { name: 'Shardeum', symbol: 'SHM', decimals: 18 },
+					rpcUrls: [RPC_URL],
+					blockExplorerUrls: ['https://explorer-unstable.shardeum.org/']
+				}]
+			});
+		}
+	}
+
+	async function connect() {
+		try {
+			await ensureNetwork();
+			const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+			document.getElementById('account').textContent = accounts[0];
+		} catch (e) {
+			setStatus(e.message);
+		}
+	}
+
+	function setStatus(text) {
+		document.getElementById('status').textContent = text || '';
+	}
+
+	async function sendMessage() {
+		try {
+			if (CONTRACT_ADDRESS.startsWith('REPLACE')) throw new Error('Deploy contract first and set CONTRACT_ADDRESS');
+			abi = await (await fetch('/abi.json')).json();
+			await ensureNetwork();
+			const provider = new ethers.BrowserProvider(window.ethereum);
+			const signer = await provider.getSigner();
+			const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
+			const message = document.getElementById('msg').value.trim();
+			if (!message) throw new Error('Message cannot be empty');
+			setStatus('Sending transaction...');
+			const tx = await contract.sendMessage(message, { value: ethers.parseEther('0.2') });
+			await tx.wait();
+			setStatus('Message sent! Tx: ' + tx.hash);
+		} catch (e) {
+			setStatus('Error: ' + (e?.message || e));
+		}
+	}
+
+	document.getElementById('connectBtn').addEventListener('click', connect);
+	document.getElementById('sendBtn').addEventListener('click', sendMessage);
+	</script>
+</body>
+</html> 
