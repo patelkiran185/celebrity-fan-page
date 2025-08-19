@@ -23,66 +23,10 @@
 		<div class="row"><small id="status"></small></div>
 	</div>
 
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.12.1/ethers.umd.min.js" integrity="sha512-7jZfTjYvB2oYWEtU7K3mAZK1yB4dWtcXHQhBbW7lcFfRHgWrS5QtRZ0x+yzPq2xk4PV7rP1h6JjzBgx8MeJOWg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<script type="module" src="./app.js"></script>
 	<script>
-	const RPC_URL = 'https://api-unstable.shardeum.org';
-	const CHAIN_ID = 8080; // Unstablenet
-	const CONTRACT_ADDRESS = 'REPLACE_WITH_DEPLOYED_ADDRESS';
-	let abi = [];
-
-	async function ensureNetwork() {
-		const provider = window.ethereum;
-		if (!provider) throw new Error('MetaMask not found');
-		const network = await provider.request({ method: 'eth_chainId' });
-		if (parseInt(network, 16) !== CHAIN_ID) {
-			await provider.request({
-				method: 'wallet_addEthereumChain',
-				params: [{
-					chainId: '0x' + CHAIN_ID.toString(16),
-					chainName: 'Shardeum Unstablenet',
-					nativeCurrency: { name: 'Shardeum', symbol: 'SHM', decimals: 18 },
-					rpcUrls: [RPC_URL],
-					blockExplorerUrls: ['https://explorer-unstable.shardeum.org/']
-				}]
-			});
-		}
-	}
-
-	async function connect() {
-		try {
-			await ensureNetwork();
-			const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-			document.getElementById('account').textContent = accounts[0];
-		} catch (e) {
-			setStatus(e.message);
-		}
-	}
-
-	function setStatus(text) {
-		document.getElementById('status').textContent = text || '';
-	}
-
-	async function sendMessage() {
-		try {
-			if (CONTRACT_ADDRESS.startsWith('REPLACE')) throw new Error('Deploy contract first and set CONTRACT_ADDRESS');
-			abi = await (await fetch('/abi.json')).json();
-			await ensureNetwork();
-			const provider = new ethers.BrowserProvider(window.ethereum);
-			const signer = await provider.getSigner();
-			const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
-			const message = document.getElementById('msg').value.trim();
-			if (!message) throw new Error('Message cannot be empty');
-			setStatus('Sending transaction...');
-			const tx = await contract.sendMessage(message, { value: ethers.parseEther('0.2') });
-			await tx.wait();
-			setStatus('Message sent! Tx: ' + tx.hash);
-		} catch (e) {
-			setStatus('Error: ' + (e?.message || e));
-		}
-	}
-
-	document.getElementById('connectBtn').addEventListener('click', connect);
-	document.getElementById('sendBtn').addEventListener('click', sendMessage);
+document.getElementById('connectBtn').addEventListener('click', () => window.connect());
+document.getElementById('sendBtn').addEventListener('click', () => window.sendMessage());
 	</script>
 </body>
 </html> 
