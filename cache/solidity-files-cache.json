@@ -1,0 +1,41 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "/home/patelkiran18/Desktop/SHARD/contracts/CelebrityFanMessages.sol": {
+      "lastModificationDate": 1755272173890,
+      "contentHash": "2d1dd1e3d20c60239c5af041db9469c4",
+      "sourceName": "contracts/CelebrityFanMessages.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "CelebrityFanMessages"
+      ]
+    }
+  }
+}

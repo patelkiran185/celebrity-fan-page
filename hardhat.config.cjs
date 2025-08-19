@@ -1,8 +1,8 @@
-import '@nomicfoundation/hardhat-toolbox';
+require('@nomicfoundation/hardhat-toolbox');
 
 const PRIVATE_KEY = (process.env.PRIVATE_KEY || '').replace(/^0x/, '');
 
-export default {
+module.exports = {
 	solidity: '0.8.20',
 	networks: {
 		shardeum: {
