@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useClerk } from '@clerk/clerk-react';
 import { Search } from "lucide-react";
 import { HeroSection } from "@/components/HeroSection";
@@ -14,6 +14,7 @@ import { ethers } from "ethers";
 const RPC_URL = 'https://api-unstable.shardeum.org';
 const CHAIN_ID = 8080;
 const CONTRACT_ADDRESS = '0xb08E78fCB8D9cc29cfE7D8f1E3Ef322611598BAE';
+const DEMO_MODE = true;
 
 
 const celebrities = [
@@ -58,6 +59,7 @@ const Index = () => {
   const [status, setStatus] = useState<string>("");
   const [message, setMessage] = useState<string>("");
   const [isSending, setIsSending] = useState(false);
+  const [txList, setTxList] = useState<any[]>([]);
 
 
   const filteredCelebrities = celebrities.filter(celebrity =>
@@ -71,6 +73,27 @@ const Index = () => {
     setMessage("");
     setStatus("");
   };
+
+  function recordDemoTransaction(celebrity: typeof celebrities[0], msg: string) {
+    const dummyHash = '0x' + Math.random().toString(16).slice(2).padEnd(64, '0');
+    const fromAddr = account || '0xFANDEMO00000000000000000000000000000000';
+    const toAddr = '0xALEXDEMO00000000000000000000000000000000';
+    const entry = {
+      celebrityId: celebrity.id,
+      celebrityName: celebrity.name,
+      from: fromAddr,
+      to: toAddr,
+      amountShm: Number(celebrity.price),
+      message: msg,
+      txHash: dummyHash,
+      timestamp: new Date().toISOString(),
+    };
+    setTxList((prev) => {
+      const next = [entry, ...prev];
+      try { localStorage.setItem('demoTxList', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }
 
   async function ensureNetwork() {
     const provider = (window as any).ethereum;
@@ -106,19 +129,25 @@ const Index = () => {
     if (!selectedCelebrity) return;
     try {
       setIsSending(true);
-      if (!account) await connectWallet();
-      if (CONTRACT_ADDRESS.startsWith('REPLACE')) throw new Error('Deploy contract first and set CONTRACT_ADDRESS');
-      const abi = await (await fetch('/abi.json')).json();
-      await ensureNetwork();
-      const provider = new ethers.BrowserProvider((window as any).ethereum);
-      const signer = await provider.getSigner();
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
       if (!message.trim()) throw new Error('Message cannot be empty');
-      setStatus('Sending transaction...');
-      const tx = await contract.sendMessage(message, { value: ethers.parseEther(selectedCelebrity.price) });
-      await tx.wait();
-      setStatus('Message sent! Tx: ' + tx.hash);
-      setIsModalOpen(false);
+      if (DEMO_MODE) {
+        recordDemoTransaction(selectedCelebrity, message);
+        setStatus('Demo transaction recorded.');
+        setIsModalOpen(false);
+      } else {
+        if (!account) await connectWallet();
+        if (CONTRACT_ADDRESS.startsWith('REPLACE')) throw new Error('Deploy contract first and set CONTRACT_ADDRESS');
+        const abi = await (await fetch('/abi.json')).json();
+        await ensureNetwork();
+        const provider = new ethers.BrowserProvider((window as any).ethereum);
+        const signer = await provider.getSigner();
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
+        setStatus('Sending transaction...');
+        const tx = await contract.sendMessage(message, { value: ethers.parseEther(selectedCelebrity.price) });
+        await tx.wait();
+        setStatus('Message sent! Tx: ' + tx.hash);
+        setIsModalOpen(false);
+      }
     } catch (e: any) {
       setStatus('Error: ' + (e?.message || e));
     } finally {
@@ -157,6 +186,13 @@ const Index = () => {
 
   async function sendMessage(message: string, price: string) {
     try {
+      if (!message.trim()) throw new Error('Message cannot be empty');
+      if (!selectedCelebrity) throw new Error('No celebrity selected');
+      if (DEMO_MODE) {
+        recordDemoTransaction(selectedCelebrity, message);
+        setStatus('Demo transaction recorded.');
+        return;
+      }
       if (!account) await connectWallet();
       if (CONTRACT_ADDRESS.startsWith('REPLACE')) throw new Error('Deploy contract first and set CONTRACT_ADDRESS');
       const abi = await (await fetch('/abi.json')).json();
@@ -164,7 +200,6 @@ const Index = () => {
       const provider = new ethers.BrowserProvider((window as any).ethereum);
       const signer = await provider.getSigner();
       const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
-      if (!message.trim()) throw new Error('Message cannot be empty');
       setStatus('Sending transaction...');
       const tx = await contract.sendMessage(message, { value: ethers.parseEther(price) });
       await tx.wait();
@@ -173,6 +208,13 @@ const Index = () => {
       setStatus('Error: ' + (e?.message || e));
     }
   }
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('demoTxList');
+      if (saved) setTxList(JSON.parse(saved));
+    } catch {}
+  }, []);
 
 
   return (
@@ -288,6 +330,46 @@ const Index = () => {
           </div>
         </div>
       )}
+
+      {/* Transactions list */}
+      <div className="container mx-auto px-4 pb-16">
+        <h3 className="text-2xl font-bold mb-4">Recent Transactions</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b">
+                <th className="py-2 pr-4">Name</th>
+                <th className="py-2 pr-4">From</th>
+                <th className="py-2 pr-4">To</th>
+                <th className="py-2 pr-4">Amount (SHM)</th>
+                <th className="py-2 pr-4">Message</th>
+                <th className="py-2 pr-4">Timestamp</th>
+                <th className="py-2 pr-4">Tx</th>
+              </tr>
+            </thead>
+            <tbody>
+              {txList.map((t, idx) => (
+                <tr key={idx} className="border-b last:border-0">
+                  <td className="py-2 pr-4">{t.celebrityName || '-'}</td>
+                  <td className="py-2 pr-4 font-mono text-xs">{t.from || '-'}</td>
+                  <td className="py-2 pr-4 font-mono text-xs">{t.to || '-'}</td>
+                  <td className="py-2 pr-4">{t.amountShm ?? '-'}</td>
+                  <td className="py-2 pr-4">{t.message}</td>
+                  <td className="py-2 pr-4 text-xs">{new Date(t.timestamp).toLocaleString()}</td>
+                  <td className="py-2 pr-4">
+                    {t.txHash ? (
+                      <a className="text-blue-600 underline break-all" href={`https://explorer-unstable.shardeum.org/tx/${t.txHash}`} target="_blank" rel="noreferrer">View</a>
+                    ) : '-' }
+                  </td>
+                </tr>
+              ))}
+              {txList.length === 0 && (
+                <tr><td colSpan={7} className="py-4 text-gray-500">No transactions yet.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };
