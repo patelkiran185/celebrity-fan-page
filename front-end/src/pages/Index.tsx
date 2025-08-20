@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useClerk } from '@clerk/clerk-react';
 import { Search } from "lucide-react";
 import { HeroSection } from "@/components/HeroSection";
 import { CelebrityCard } from "@/components/CelebrityCard";
@@ -49,6 +50,7 @@ const celebrities = [
 ];
 
 const Index = () => {
+  const clerk = useClerk();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCelebrity, setSelectedCelebrity] = useState<typeof celebrities[0] | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -175,6 +177,17 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
+      <div className="flex justify-end p-4">
+        <button
+          className="bg-red-600 text-white px-4 py-2 rounded font-semibold hover:bg-red-700 transition"
+          onClick={async () => {
+            await clerk.signOut();
+            window.location.href = 'http://localhost:8080';
+          }}
+        >
+          Log Out
+        </button>
+      </div>
       <HeroSection />
       
       <div className="container mx-auto px-4 py-16">

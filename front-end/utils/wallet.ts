@@ -43,16 +43,18 @@ export async function sendMessage(
   try {
     if (!account) throw new Error('Connect wallet first');
     if (CONTRACT_ADDRESS.startsWith('REPLACE')) throw new Error('Deploy contract first and set CONTRACT_ADDRESS');
-   const abi = await (await fetch('/abi.json')).json();
+    const abi = await (await fetch('/abi.json')).json();
     await ensureNetwork();
     const provider = new ethers.BrowserProvider((window as any).ethereum);
     const signer = await provider.getSigner();
     const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
+
     if (!message.trim()) throw new Error('Message cannot be empty');
     setStatus('Sending transaction...');
     const tx = await contract.sendMessage(message, { value: ethers.parseEther('0.2') });
     await tx.wait();
     setStatus('Message sent! Tx: ' + tx.hash);
+    
   } catch (e: any) {
     setStatus('Error: ' + (e?.message || e));
   }
