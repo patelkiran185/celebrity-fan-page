@@ -35,6 +35,12 @@ Minimal DApp: Fans pay 0.2 SHM to send a message to a celebrity. On-chain event 
 - MetaMask
 - SHM from Unstablenet faucet
 
+Demo 
+
+
+https://github.com/user-attachments/assets/5ef6130a-a4f1-444f-b807-0551664e2204
+
+
 ## Setup
 1. Create `.env` in project root:
 ```
