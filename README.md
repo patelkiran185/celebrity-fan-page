@@ -1,6 +1,34 @@
 # Celebrity Fan Messages (Shardeum Unstablenet)
 
 Minimal DApp: Fans pay 0.2 SHM to send a message to a celebrity. On-chain event is used to verify a wallet has sent a message.
+- Decentralized platform for paid fan-to-celebrity messaging
+- Fans pay SHM to send messages; celebrities can see
+- All interactions are verifiable on-chain
+- Optional charity integration for social good
+
+## Key Features:
+- Fans pay fixed fee to send messages
+- Message metadata stored on-chain; full message on IPFS/Arweave
+- Smart contract emits event for each message
+- Revenue goes to celebrity wallet; optional charity split
+
+## Workflow:
+- Celebrity registers and verifies wallet/socials
+- Fan selects celebrity, sends message, pays fee
+- Smart contract logs event and metadata
+- Celebrity views messages in inbox, 
+- Public verification via API
+
+## Technical Architecture:
+- Solidity smart contract for payments/events/verification
+- React frontend: fan dashboard, celebrity inbox, wallet integration
+- Node.js/Express backend: event indexing, verification API
+- IPFS for message storage; Shardeum for payments/registry
+
+## What we built:
+- Connected wallet for fans and celebrities
+- Enabled paid message transactions
+- Celebrity dashboard displays received transactions/messages
 
 ## Prerequisites
 - Node 18+ (recommended Node 22 LTS)
